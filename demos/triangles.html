@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>WebGL Triangles</title>
+	<script src="../webgl.js"></script>
+	<script src="gl-matrix-min.js"></script>
+</head>
+<body>
+	<script id="vert-shader" type="text/plain">
+		attribute vec3 aPos;
+		attribute vec3 aCol;
+		uniform mat4 uProj;
+		uniform mat4 uView;
+		varying vec3 vPos;
+		varying vec3 vCol;
+		
+		void main()
+		{
+			vPos = aPos;
+			vCol = aCol;
+			gl_Position = uProj * uView * vec4(aPos, 1);
+		}
+	</script>
+	<script id="frag-shader" type="text/plain">
+		varying highp vec3 vPos;
+		varying highp vec3 vCol;
+		
+		void main()
+		{
+			gl_FragColor = vec4(vCol, 1);
+		}
+	</script>
+	<script>
+		var gl = webgl(400, 400, "appendToBody", "no-antialias");
+		
+		gl.enable(gl.DEPTH_TEST);
+		
+		var buffer1 = gl.buffer([
+			-1,+1,-1, 1,0,0,
+			-1,-1,+1, 1,0,0,
+			+1,+0,-1, 1,0,0,
+		]);
+		
+		var buffer2 = gl.buffer([
+			+1,+1,-1, 0,1,0,
+			+1,-1,+1, 0,1,0,
+			-1,+0,-1, 0,1,0,
+		]);
+		
+		var shader = gl.shader("#vert-shader", "#frag-shader");
+		
+		shader
+			.assign("uProj", mat4.perspective(mat4.create(), glMatrix.toRadian(45), 1, 1, 100))
+			.assign("uView", mat4.fromTranslation(mat4.create(), [0, 0, -4]))
+			.assign("aPos", {buffer: buffer1, offset: 4 * 0, stride: 4 * 6})
+			.assign("aCol", {buffer: buffer1, offset: 4 * 3, stride: 4 * 6})
+			.draw();
+			
+		shader
+			.assign("aPos", {buffer: buffer2, offset: 4 * 0, stride: 4 * 6})
+			.assign("aCol", {buffer: buffer2, offset: 4 * 3, stride: 4 * 6})
+			.draw();
+		
+	</script>
+</body>
+</html>

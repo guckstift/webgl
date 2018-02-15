@@ -1,58 +1,65 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>webgl</title>
-		<script src="webgl.js"></script>
-	</head>
-	<body>
-		<script id="vert-shader" type="text/plain">
-		
-			attribute vec2 aPos;
-			varying vec2 vPos;
+<head>
+	<title>webgl</title>
+	<script src="webgl.js"></script>
+</head>
+<body>
+	<script id="vert-shader" type="text/plain">
+	
+		attribute vec2 aPos;
+		varying vec2 vPos;
 
-			void main()
-			{
-				vPos = aPos;
-				gl_Position = vec4(aPos * 2.0 - vec2(1), 0.0, 1.0);
-			}
-			
-		</script>
-		<script id="frag-shader" type="text/plain">
+		void main()
+		{
+			vPos = aPos;
+			gl_Position = vec4(aPos * 2.0 - vec2(1), 0.0, 1.0);
+		}
 		
-			uniform sampler2D uTex;
-			varying highp vec2 vPos;
+	</script>
+	<script id="frag-shader" type="text/plain">
+	
+		uniform sampler2D uTex;
+		varying highp vec2 vPos;
 
-			void main()
-			{
-				gl_FragColor = texture2D(uTex, vec2(vPos.x, 1.0 - vPos.y));
-			}
-		
-		</script>
-		<script id="frag-shader2" type="text/plain">
-		
-			varying highp vec2 vPos;
+		void main()
+		{
+			gl_FragColor = texture2D(uTex, vec2(vPos.x, 1.0 - vPos.y));
+		}
+	
+	</script>
+	<script id="frag-shader2" type="text/plain">
+	
+		varying highp vec2 vPos;
 
-			void main()
-			{
-				gl_FragColor = vec4(vPos, 0, 1);
-			}
+		void main()
+		{
+			gl_FragColor = vec4(vPos, 0, 1);
+		}
+	
+	</script>
+	<script>
+	
+		var gl = webgl(400, 400, render, "appendToBody", "no-antialias", "no-alpha");
+		var buffer = gl.buffer([0,0, 1,0, 0,1, 1,1]);
+		var indices = gl.buffer("index", [0,1,2, 1,2,3]);
+		var shader1 = gl.shader("#vert-shader", "#frag-shader");
+		var shader2 = gl.shader("#vert-shader", "#frag-shader2");
+		var texture = gl.textureFromUrl("tree.png");
 		
-		</script>
-		<script>
+		gl.setClearColor(0,0,1,1);
 		
-			var gl = webgl(400, 400, render, "appendToBody", "no-antialias", "no-alpha");
-			var buffer = gl.buffer([0,0, 1,0, 0,1, 1,1]);
-			var indices = gl.buffer("index", [0,1,2, 1,2,3]);
-			var shader1 = gl.shader("#vert-shader", "#frag-shader");
-			var shader2 = gl.shader("#vert-shader", "#frag-shader2");
-			var texture = gl.textureFromUrl("tree.png");
+		function render()
+		{
+			//shader2.draw({indices: indices, aPos: buffer});
 			
-			function render()
-			{
-				shader2.draw({indices: indices, aPos: buffer});
-				shader1.draw({indices: indices, aPos: buffer, uTex: texture});
-			}
-			
-		</script>
-	</body>
+			shader1
+				.indices(indices)
+				.assign("aPos", buffer)
+				.assign("uTex", texture)
+				.draw();
+		}
+		
+	</script>
+</body>
 </html>
