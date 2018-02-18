@@ -1,3 +1,5 @@
+var texCache = {};
+
 function texture(width, height, pixels, filter)
 {
 	var tex = this.createTexture();
@@ -35,23 +37,29 @@ function texture(width, height, pixels, filter)
 		);
 	}
 	
-	tex.width = width;
-	tex.height = height;
+	tex.size = [width, height];
 	tex.ready = true;
+	tex.img = undefined;
 	
 	return tex;
 }
 
 function textureFromUrl(url, filter, readyFunc)
 {
-	var filterName = filter || "nearest";
+	if(typeof filter === "function") {
+		readyFunc = filter;
+		filter = undefined;
+	}
 	
-	if(texCache[url + "#" + filterName]) {
+	var filterName = filter || "nearest";
+	var texid = url + "#" + filterName;
+	
+	if(texCache[texid]) {
 		if(readyFunc) {
-			readyFunc();
+			readyFunc(texCache[texid]);
 		}
 		
-		return texCache[url + "#" + filterName];
+		return texCache[texid];
 	}
 	
 	filter = (
@@ -64,16 +72,15 @@ function textureFromUrl(url, filter, readyFunc)
 	img.addEventListener("load", imgLoad.bind(this));
 	img.src = url;
 	
-	tex.width = 0;
-	tex.height = 0;
+	tex.size = [0, 0];
 	tex.ready = false;
+	tex.img = img;
 	
 	return tex;
 	
 	function imgLoad()
 	{
-		tex.width = img.width;
-		tex.height = img.height;
+		tex.size = [img.width, img.height];
 		tex.ready = true;
 	
 		this.bindTexture(this.TEXTURE_2D, tex);
@@ -81,10 +88,10 @@ function textureFromUrl(url, filter, readyFunc)
 		this.texParameteri(this.TEXTURE_2D, this.TEXTURE_MAG_FILTER, filter);
 		this.texImage2D(this.TEXTURE_2D, 0, this.RGBA, this.RGBA, this.UNSIGNED_BYTE, img);
 		
-		texCache[url + "#" + filterName] = tex;
+		texCache[texid] = tex;
 		
 		if(readyFunc) {
-			readyFunc();
+			readyFunc(tex);
 		}
 	}
 }

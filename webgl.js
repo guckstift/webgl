@@ -1,7 +1,9 @@
 var webgl = (function() {
 
-var texCache = {};
-shaderCache = {};
+var plugins = {};
+
+webgl.plugins = plugins;
+webgl.loadText = loadText;
 
 function webgl(w, h)
 {
@@ -106,6 +108,14 @@ function webgl(w, h)
 		gl.setRenderFunc(renderFunc);
 	}
 	
+	var pluginKeys = Object.getOwnPropertyNames(plugins);
+	
+	for(var i=0; i<pluginKeys.length; i++) {
+		var key = pluginKeys[i];
+		
+		gl[key] = plugins[key];
+	}
+	
 	return gl;
 }
 
@@ -192,11 +202,11 @@ function setRenderFunc(func)
 		requestAnimationFrame(frame);
 	}
 	
-	function frame()
+	function frame(now)
 	{
 		if(self.renderFunc) {
 			self.clear(self.COLOR_BUFFER_BIT);
-			self.renderFunc();
+			self.renderFunc(now);
 			requestAnimationFrame(frame);
 		}
 		else {
@@ -210,6 +220,35 @@ function useShader(shader)
 	if(this.lastShader !== shader) {
 		this.useProgram(shader);
 		this.lastShader = shader;
+	}
+}
+
+function combineTextFromUrls(urls, srcMap)
+{
+	var res = "";
+
+	for(var i=0; i<urls.length; i++) {
+		var url = urls[i];
+		var text = srcMap[url];
+		res += text;
+	}
+
+	return res;
+}
+
+function loadText(url, callback)
+{
+	var xhr = new XMLHttpRequest();
+
+	xhr.open("GET", url);
+	xhr.addEventListener("load", xhrLoad);
+	xhr.send();
+
+	function xhrLoad()
+	{
+		if(xhr.status === 200) {
+			callback(xhr.responseText);
+		}
 	}
 }
 function buffer()
@@ -330,6 +369,8 @@ function bufferUpdate()
 	
 	return this;
 }
+var shaderCache = {};
+
 function createShader(gl)
 {
 	var prog = gl.createProgram();
@@ -340,15 +381,22 @@ function createShader(gl)
 	prog.gl = gl;
 	prog.ready = false;
 	prog._indices = undefined;
-	prog._mode = gl.TRIANGLES;
-	prog._count = 0;
-	prog._divisor = 0;
-	prog._instances = 1;
+	prog._mode = undefined;
+	prog._stride = undefined;
+	prog._offset = undefined;
+	prog._count = undefined;
+	prog._divisor = undefined;
+	prog._instances = undefined;
+	prog._buffer = undefined;
 	
 	prog.indices = shaderIndices;
 	prog.mode = shaderMode;
+	prog.stride = shaderStride;
+	prog.offset = shaderOffset;
+	prog.count = shaderCount;
 	prog.divisor = shaderDivisor;
 	prog.instances = shaderInstances;
+	prog.buffer = shaderBuffer;
 	prog.assign = shaderAssign;
 	prog.draw = shaderDraw;
 	
@@ -358,21 +406,25 @@ function createShader(gl)
 function shader(vert, frag)
 {
 	var shaderId = null;
-	
-	if(
-		typeof vert === "string" && typeof frag === "string" &&
-		document.querySelector(vert) && document.querySelector(frag)
-	) {
-		shaderId = vert + "|" + frag;
-		
-		if(shaderCache[shaderId]) {
-			return shaderCache[shaderId];
-		}
-	}
-	
 	var prog = createShader(this);
-	var vertElm = typeof vert === "string" ? document.querySelector(vert) : vert;
-	var fragElm = typeof frag === "string" ? document.querySelector(frag) : frag;
+	
+	try {
+		if(
+			typeof vert === "string" && typeof frag === "string" &&
+			document.querySelector(vert) && document.querySelector(frag)
+		) {
+			shaderId = vert + "|" + frag;
+		
+			if(shaderCache[shaderId]) {
+				return shaderCache[shaderId];
+			}
+		}
+	
+		var vertElm = typeof vert === "string" ? document.querySelector(vert) : vert;
+		var fragElm = typeof frag === "string" ? document.querySelector(frag) : frag;
+	}
+	catch(e) {
+	}
 	
 	vert = vertElm instanceof Node ? vertElm.textContent : vert;
 	frag = fragElm instanceof Node ? fragElm.textContent : frag;
@@ -393,7 +445,7 @@ function shaderFromUrl(vertUrls, fragUrls, readyFunc)
 	
 	if(shaderCache[shaderId]) {
 		if(readyFunc) {
-			readyFunc();
+			readyFunc(shaderCache[shaderId]);
 		}
 		
 		return shaderCache[shaderId];
@@ -430,7 +482,7 @@ function shaderFromUrl(vertUrls, fragUrls, readyFunc)
 				shaderCache[shaderId] = prog;
 				
 				if(readyFunc) {
-					readyFunc();
+					readyFunc(prog);
 				}
 			}
 		}
@@ -449,37 +501,8 @@ function shaderFromUrl(vertUrls, fragUrls, readyFunc)
 				shaderCache[shaderId] = prog;
 				
 				if(readyFunc) {
-					readyFunc();
+					readyFunc(prog);
 				}
-			}
-		}
-	}
-
-	function combineTextFromUrls(urls, srcMap)
-	{
-		var res = "";
-
-		for(var i=0; i<urls.length; i++) {
-			var url = urls[i];
-			var text = srcMap[url];
-			res += text;
-		}
-
-		return res;
-	}
-
-	function loadText(url, callback)
-	{
-		var xhr = new XMLHttpRequest();
-	
-		xhr.open("GET", url);
-		xhr.addEventListener("load", xhrLoad);
-		xhr.send();
-	
-		function xhrLoad()
-		{
-			if(xhr.status === 200) {
-				callback(xhr.responseText);
 			}
 		}
 	}
@@ -589,9 +612,37 @@ function shaderMode(mode)
 	return this;
 }
 
+function shaderStride(stride)
+{
+	this._stride = stride;
+	
+	return this;
+};
+
+function shaderOffset(offset)
+{
+	this._offset = offset;
+	
+	return this;
+};
+
+function shaderCount(count)
+{
+	this._count = count;
+	
+	return this;
+};
+
 function shaderDivisor(divisor)
 {
 	this._divisor = divisor;
+	
+	return this;
+}
+
+function shaderBuffer(buffer)
+{
+	this._buffer = buffer;
 	
 	return this;
 }
@@ -619,10 +670,31 @@ function shaderAssignAttribute(name, value)
 {
 	var gl = this.gl;
 	var attrib = this.attributes[name];
-	var buffer = value.buffer || value;
-	var offset = value.offset || 0;
-	var stride = value.stride || 0;
-	var divisor = value.divisor || 0;
+	
+	var buffer = (
+		value.buffer !== undefined ? value.buffer :
+		value instanceof WebGLBuffer ? value :
+		this._buffer !== undefined ? this._buffer :
+		0
+	);
+	
+	var offset = (
+		value.offset !== undefined ? value.offset :
+		this._offset !== undefined ? this._offset :
+		0
+	);
+	
+	var stride = (
+		value.stride !== undefined ? value.stride :
+		this._stride !== undefined ? this._stride :
+		0
+	);
+	
+	var divisor = (
+		value.divisor !== undefined ? value.divisor :
+		this._divisor !== undefined ? this._divisor :
+		0
+	);
 	
 	if(!attrib) {
 		return this;
@@ -641,12 +713,6 @@ function shaderAssignAttribute(name, value)
 	
 	if(components === 0) {
 		throw "Error: Attribute type not supported.";
-	}
-	
-	if(stride) {
-		this._count = Math.floor(buffer.len * buffer.bytesPerElm / stride);
-	} else {
-		this._count = Math.floor(buffer.len / components);
 	}
 	
 	buffer.update();
@@ -760,11 +826,23 @@ function shaderDraw(input)
 		else if(key === "mode") {
 			this.mode(input[key]);
 		}
+		else if(key === "stride") {
+			this.stride(input[key]);
+		}
+		else if(key === "offset") {
+			this.offset(input[key]);
+		}
+		else if(key === "count") {
+			this.count(input[key]);
+		}
 		else if(key === "divisor") {
 			this.divisor(input[key]);
 		}
 		else if(key === "instances") {
 			this.instances(input[key]);
+		}
+		else if(key === "buffer") {
+			this.buffer(input[key]);
 		}
 		else {
 			this.assign(key, input[key]);
@@ -788,27 +866,32 @@ function shaderDraw(input)
 	
 	gl.useShader(this);
 	
+	var mode = this._mode || gl.TRIANGLES;
+	var instances = this._instances || 1;
+	
 	if(gl.ia) {
 		if(this._indices) {
 			gl.ia.drawElementsInstancedANGLE(
-				this._mode, this._indices.len, this._indices.glType, 0, this._instances
+				mode, this._indices.len, this._indices.glType, 0, instances
 			);
 		}
 		else {
-			gl.ia.drawArraysInstancedANGLE(this._mode, 0, this._count, this._instances);
+			gl.ia.drawArraysInstancedANGLE(mode, 0, this._count, instances);
 		}
 	}
 	else {
 		if(this._indices) {
-			gl.drawElements(this._mode, this._indices.len, this._indices.glType, 0);
+			gl.drawElements(mode, this._indices.len, this._indices.glType, 0);
 		}
 		else {
-			gl.drawArrays(this._mode, 0, this._count);
+			gl.drawArrays(mode, 0, this._count);
 		}
 	}
 	
 	return this;
 }
+var texCache = {};
+
 function texture(width, height, pixels, filter)
 {
 	var tex = this.createTexture();
@@ -846,23 +929,29 @@ function texture(width, height, pixels, filter)
 		);
 	}
 	
-	tex.width = width;
-	tex.height = height;
+	tex.size = [width, height];
 	tex.ready = true;
+	tex.img = undefined;
 	
 	return tex;
 }
 
 function textureFromUrl(url, filter, readyFunc)
 {
-	var filterName = filter || "nearest";
+	if(typeof filter === "function") {
+		readyFunc = filter;
+		filter = undefined;
+	}
 	
-	if(texCache[url + "#" + filterName]) {
+	var filterName = filter || "nearest";
+	var texid = url + "#" + filterName;
+	
+	if(texCache[texid]) {
 		if(readyFunc) {
-			readyFunc();
+			readyFunc(texCache[texid]);
 		}
 		
-		return texCache[url + "#" + filterName];
+		return texCache[texid];
 	}
 	
 	filter = (
@@ -875,16 +964,15 @@ function textureFromUrl(url, filter, readyFunc)
 	img.addEventListener("load", imgLoad.bind(this));
 	img.src = url;
 	
-	tex.width = 0;
-	tex.height = 0;
+	tex.size = [0, 0];
 	tex.ready = false;
+	tex.img = img;
 	
 	return tex;
 	
 	function imgLoad()
 	{
-		tex.width = img.width;
-		tex.height = img.height;
+		tex.size = [img.width, img.height];
 		tex.ready = true;
 	
 		this.bindTexture(this.TEXTURE_2D, tex);
@@ -892,10 +980,10 @@ function textureFromUrl(url, filter, readyFunc)
 		this.texParameteri(this.TEXTURE_2D, this.TEXTURE_MAG_FILTER, filter);
 		this.texImage2D(this.TEXTURE_2D, 0, this.RGBA, this.RGBA, this.UNSIGNED_BYTE, img);
 		
-		texCache[url + "#" + filterName] = tex;
+		texCache[texid] = tex;
 		
 		if(readyFunc) {
-			readyFunc();
+			readyFunc(tex);
 		}
 	}
 }

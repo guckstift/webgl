@@ -54,12 +54,12 @@
 			.assign("uView", mat4.fromTranslation(mat4.create(), [0, 0, -4]))
 			.assign("aPos", {buffer: buffer1, offset: 4 * 0, stride: 4 * 6})
 			.assign("aCol", {buffer: buffer1, offset: 4 * 3, stride: 4 * 6})
-			.draw();
+			.draw({count: 3});
 			
 		shader
 			.assign("aPos", {buffer: buffer2, offset: 4 * 0, stride: 4 * 6})
 			.assign("aCol", {buffer: buffer2, offset: 4 * 3, stride: 4 * 6})
-			.draw();
+			.draw({count: 3});
 		
 	</script>
 </body>

@@ -25,7 +25,7 @@
 		var gl = webgl(400, 400, "appendToBody");
 		var buffer = gl.buffer([0,0, 1,0, 0,1]);
 		var shader = gl.shader("#vert-shader", "#frag-shader");
-		shader.draw({aPos: buffer});
+		shader.draw({count: 3, aPos: buffer});
 	</script>
 </body>
 </html>

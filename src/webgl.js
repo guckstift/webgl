@@ -1,5 +1,7 @@
-var texCache = {};
-shaderCache = {};
+var plugins = {};
+
+webgl.plugins = plugins;
+webgl.loadText = loadText;
 
 function webgl(w, h)
 {
@@ -104,6 +106,14 @@ function webgl(w, h)
 		gl.setRenderFunc(renderFunc);
 	}
 	
+	var pluginKeys = Object.getOwnPropertyNames(plugins);
+	
+	for(var i=0; i<pluginKeys.length; i++) {
+		var key = pluginKeys[i];
+		
+		gl[key] = plugins[key];
+	}
+	
 	return gl;
 }
 
@@ -190,11 +200,11 @@ function setRenderFunc(func)
 		requestAnimationFrame(frame);
 	}
 	
-	function frame()
+	function frame(now)
 	{
 		if(self.renderFunc) {
 			self.clear(self.COLOR_BUFFER_BIT);
-			self.renderFunc();
+			self.renderFunc(now);
 			requestAnimationFrame(frame);
 		}
 		else {
@@ -208,5 +218,34 @@ function useShader(shader)
 	if(this.lastShader !== shader) {
 		this.useProgram(shader);
 		this.lastShader = shader;
+	}
+}
+
+function combineTextFromUrls(urls, srcMap)
+{
+	var res = "";
+
+	for(var i=0; i<urls.length; i++) {
+		var url = urls[i];
+		var text = srcMap[url];
+		res += text;
+	}
+
+	return res;
+}
+
+function loadText(url, callback)
+{
+	var xhr = new XMLHttpRequest();
+
+	xhr.open("GET", url);
+	xhr.addEventListener("load", xhrLoad);
+	xhr.send();
+
+	function xhrLoad()
+	{
+		if(xhr.status === 200) {
+			callback(xhr.responseText);
+		}
 	}
 }
