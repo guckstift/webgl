@@ -894,6 +894,10 @@ var texCache = {};
 
 function texture(width, height, pixels, filter)
 {
+	if(typeof width === "string") {
+		return this.textureFromUrl(width, height, pixels);
+	}
+	
 	var tex = this.createTexture();
 	
 	this.bindTexture(this.TEXTURE_2D, tex);

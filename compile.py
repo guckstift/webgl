@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 
+import os.path
+
+thisDir = os.path.dirname(__file__)
+
 res = "var webgl = (function() {\n\n"
 
-res += open("src/webgl.js").read()
-res += open("src/buffer.js").read()
-res += open("src/shader.js").read()
-res += open("src/texture.js").read()
+res += open(thisDir + "/src/webgl.js").read()
+res += open(thisDir + "/src/buffer.js").read()
+res += open(thisDir + "/src/shader.js").read()
+res += open(thisDir + "/src/texture.js").read()
 
 res += "\nreturn webgl;})();"
 
-open("webgl.js", "w").write(res);
+open(thisDir + "/webgl.js", "w").write(res);
