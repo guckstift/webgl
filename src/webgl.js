@@ -187,6 +187,8 @@ function setClearColor(r, g, b, a)
 	}
 	
 	this.clearColor(r, g, b, a);
+	
+	return this;
 }
 
 function setRenderFunc(func)

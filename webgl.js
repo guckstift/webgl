@@ -189,6 +189,8 @@ function setClearColor(r, g, b, a)
 	}
 	
 	this.clearColor(r, g, b, a);
+	
+	return this;
 }
 
 function setRenderFunc(func)
@@ -380,6 +382,8 @@ function createShader(gl)
 	
 	prog.gl = gl;
 	prog.ready = false;
+	prog.attributes = {};
+	prog.uniforms = {};
 	prog._indices = undefined;
 	prog._mode = undefined;
 	prog._stride = undefined;
@@ -775,7 +779,7 @@ function shaderAssignUniform(name, value)
 	}
 	else {
 		var func = (
-			type === gl.FLOAT ? gl.uniform1fv :
+			type === gl.FLOAT ? gl.uniform1f :
 			type === gl.FLOAT_VEC2 ? gl.uniform2fv :
 			type === gl.FLOAT_VEC3 ? gl.uniform3fv :
 			type === gl.FLOAT_VEC4 ? gl.uniform4fv :
