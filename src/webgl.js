@@ -13,7 +13,7 @@ function webgl(w, h)
 		width = width[0];
 	}
 	
-	var setSize = typeof width === "number" && typeof height === "number"
+	var setSize = typeof width === "number" && typeof height === "number";
 	var argc = arguments.length;
 	var toBody = false;
 	var fullPage = false;
@@ -27,7 +27,7 @@ function webgl(w, h)
 		premultipliedAlpha: true,
 		preserveDrawingBuffer: false,
 		failIfMajorPerformanceCaveat: false,
-	}
+	};
 	
 	for(var i=0; i<argc; i++) {
 		var arg = arguments[i];

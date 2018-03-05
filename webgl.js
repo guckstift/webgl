@@ -15,7 +15,7 @@ function webgl(w, h)
 		width = width[0];
 	}
 	
-	var setSize = typeof width === "number" && typeof height === "number"
+	var setSize = typeof width === "number" && typeof height === "number";
 	var argc = arguments.length;
 	var toBody = false;
 	var fullPage = false;
@@ -29,7 +29,7 @@ function webgl(w, h)
 		premultipliedAlpha: true,
 		preserveDrawingBuffer: false,
 		failIfMajorPerformanceCaveat: false,
-	}
+	};
 	
 	for(var i=0; i<argc; i++) {
 		var arg = arguments[i];
@@ -411,6 +411,8 @@ function shader(vert, frag)
 {
 	var shaderId = null;
 	var prog = createShader(this);
+	var vertElm = null;
+	var fragElm = null;
 	
 	try {
 		if(
@@ -424,8 +426,8 @@ function shader(vert, frag)
 			}
 		}
 	
-		var vertElm = typeof vert === "string" ? document.querySelector(vert) : vert;
-		var fragElm = typeof frag === "string" ? document.querySelector(frag) : frag;
+		vertElm = typeof vert === "string" ? document.querySelector(vert) : vert;
+		fragElm = typeof frag === "string" ? document.querySelector(frag) : frag;
 	}
 	catch(e) {
 	}
@@ -783,7 +785,7 @@ function shaderAssignUniform(name, value)
 			type === gl.FLOAT_VEC2 ? gl.uniform2fv :
 			type === gl.FLOAT_VEC3 ? gl.uniform3fv :
 			type === gl.FLOAT_VEC4 ? gl.uniform4fv :
-			type === gl.INT || type === gl.BOOL ? gl.uniform1iv :
+			type === gl.INT || type === gl.BOOL ? gl.uniform1i :
 			type === gl.INT_VEC2 || type === gl.BOOL_VEC2 ? gl.uniform2iv :
 			type === gl.INT_VEC3 || type === gl.BOOL_VEC3 ? gl.uniform3iv :
 			type === gl.INT_VEC4 || type === gl.BOOL_VEC4 ? gl.uniform4iv :
