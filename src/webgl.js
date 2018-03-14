@@ -84,7 +84,7 @@ function webgl(w, h)
 	
 	gl.onWindowResize = function()
 	{
-		gl.resize(innerWidth, innerHeight);
+		gl.resize(Math.floor(innerWidth / 2) * 2, Math.floor(innerHeight / 2) * 2);
 	};
 	
 	if(setSize) {
