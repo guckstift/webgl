@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>gluck getting started</title>
+		<script type="module">
+			import webgl from "../webgl.js";
+			
+			let gl = webgl(400, 400, "appendToBody");
+			
+			let shader = gl.shader("mediump", `
+				attribute vec2 pos;
+				varying vec2 vpos;
+				
+				void main()
+				{
+					gl_Position = vec4(pos, 0, 1);
+					vpos = pos;
+				}
+			`,`
+				varying vec2 vpos;
+				
+				void main()
+				{
+					gl_FragColor = vec4(vpos, 0, 1);
+				}
+			`);
+			
+			let buffer = gl.buffer([0,0, 1,0, 0,1]);
+			shader.draw(3, {pos: buffer});
+		</script>
+	</head>
+</html>
