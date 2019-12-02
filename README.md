@@ -20,17 +20,17 @@ let gl = webgl();
 ```
 
 An underlying canvas is created automatically. Its width and height falls back to the browsers defaults of 300 and 150 pixels.
-To size it to 800x600 pixels give these first 2 arguments:
+To size it to 400x400 pixels give these first 2 arguments:
 
 ```js
-let gl = webgl(800, 600);
+let gl = webgl(400, 400);
 ```
 
 Most of the time after creation you would place the canvas somewhere in the DOM but in the simplest case append it to the body.
 Just tell gluck to do that with an additional hint:
 
 ```js
-let gl = webgl(800, 600, "appendToBody");
+let gl = webgl(400, 400, "appendToBody");
 ```
 
 And now we can work with the context. But in WebGL nothing can be drawn without its most essential object: the shader.
@@ -111,7 +111,7 @@ Creates a WebGL context from an existing or automatically created canvas.
     * `"lowPower"` will set `powerPreference = "low-power"`
   * `"appendToBody"` tells gluck to append the canvas to the body after creation
 
-The created context will have enhanced helper methods: `aspect()`
+The created context will have enhanced helper methods: `aspect()`, `shader()`, `buffer()`, `indices()`, `texture()`.
 
 ```js
 let aspect = gl.aspect();
@@ -125,7 +125,7 @@ Returns the aspect ratio of the canvas. Nothing else than `gl.canvas.clientWidth
 let buffer = gl.buffer(["index",] [usage,] [type,] [sizeOrData])
 ```
 
-Creates a vertex or index buffer with a specified usage pattern and optionally data to be initialised with.
+Creates a vertex or index buffer with a specified usage pattern and optionally the data to initialize the buffer with.
 
 * `"index"` as the first argument will denote this buffer as an index buffer and bind it as an "element array buffer". Otherwise
   it will be a regular vertex buffer and bound as an "array buffer".
